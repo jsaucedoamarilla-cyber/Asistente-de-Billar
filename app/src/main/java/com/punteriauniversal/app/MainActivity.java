@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.InputStream;
+import org.opencv.android.OpenCVLoader;
 
 public class MainActivity extends Activity {
     private AimView aimView;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity {
     private static final int PICK_IMAGE = 81;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        boolean cvReady = OpenCVLoader.initLocal();
         getWindow().setStatusBarColor(Color.rgb(8,16,29));
         getWindow().setNavigationBarColor(Color.rgb(8,16,29));
         LinearLayout root = new LinearLayout(this);
@@ -30,12 +32,15 @@ public class MainActivity extends Activity {
         title.setPadding(0,dp(8),0,dp(4)); title.setTypeface(null,1);
         root.addView(title,new LinearLayout.LayoutParams(-1,-2));
         TextView sub = new TextView(this);
-        sub.setText("ASISTENTE INTELIGENTE DE BILLAR · VERSIÓN 0.1");
+        sub.setText("DETECCIÓN EXPERIMENTAL DE BOLAS · VERSIÓN 0.2");
         sub.setTextColor(Color.rgb(65,211,188)); sub.setTextSize(11); sub.setGravity(Gravity.CENTER);
         sub.setPadding(0,0,0,dp(12)); root.addView(sub);
         Button load = button("📷 CARGAR CAPTURA DEL BILLAR");
+        Button detect = button("✨ DETECTAR BOLAS AUTOMÁTICAMENTE");
+        detect.setOnClickListener(v -> setStatus(cvReady ? aimView.autoDetectBalls() : "No se pudo iniciar el detector."));
         load.setOnClickListener(v -> { Intent i=new Intent(Intent.ACTION_GET_CONTENT); i.setType("image/*"); startActivityForResult(Intent.createChooser(i,"Elegir captura"),PICK_IMAGE); });
         root.addView(load,new LinearLayout.LayoutParams(-1,dp(48)));
+        root.addView(detect,new LinearLayout.LayoutParams(-1,dp(48)));
         aimView = new AimView(this);
         LinearLayout.LayoutParams canvasParams = new LinearLayout.LayoutParams(-1,0,1f);
         canvasParams.setMargins(0,dp(10),0,dp(10)); root.addView(aimView,canvasParams);
@@ -67,7 +72,7 @@ public class MainActivity extends Activity {
         if(requestCode==PICK_IMAGE && resultCode==RESULT_OK && data!=null){
             try(InputStream in=getContentResolver().openInputStream(data.getData())){
                 Bitmap bmp=BitmapFactory.decodeStream(in);
-                if(bmp!=null){aimView.setBitmap(bmp);setStatus("Captura cargada. Elegí Blanca y tocá su posición.");}
+                if(bmp!=null){aimView.setBitmap(bmp);setStatus("Captura cargada. Tocá DETECTAR BOLAS para buscar círculos.");}
                 else setStatus("No se pudo leer esa imagen.");
             }catch(Exception e){setStatus("No se pudo abrir la captura.");}
         }

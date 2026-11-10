@@ -1,5 +1,9 @@
 plugins { id 'com.android.application' }
 
+dependencies {
+    implementation 'org.opencv:opencv:4.10.0'
+}
+
 android {
     namespace 'com.punteriauniversal.app'
     compileSdk 35
